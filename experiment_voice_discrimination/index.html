@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Listening Experiment</title>
+    <meta http-equiv="pragma" content="no-cache">
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <link rel="stylesheet" href="../jspsych/dist/jspsych.css">
+    <script src="../jspsych/dist/jspsych.js"></script>
+    <script src="../jspsych/dist/plugin-preload.js"></script>
+    <script src="../jspsych/dist/plugin-instructions.js"></script>
+    <script src="../jspsych/dist/plugin-survey-multi-select.js"></script>
+    <script src="../jspsych/dist/plugin-survey-multi-choice.js"></script>
+    <script src="../jspsych/dist/plugin-survey-text.js"></script>
+    <script src="../jspsych/dist/plugin-audio-button-response.js"></script>
+    <script src="../jspsych/dist/plugin-audio-keyboard-response.js"></script>
+    <script src="../jspsych/dist/plugin-html-button-response.js"></script>
+    <script src="../jspsych/dist/plugin-html-keyboard-response.js"></script>
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js'></script>
+    <script src="../util.js"></script>
+</head>
+
+<body></body>
+
+<script>
+    // Disable DEBUG_MODE before publishing experiment to enable randomization / reduce verbosity
+    var DEBUG_MODE = false;
+    // Initalize jsPsych object and experiment timeline
+    function on_trial_finish() {
+        debug_print("Executing `jsPsych.on_trial_finish` function");
+        if (jsPsych.data.get().values().length > 10) {
+            write_data_to_server(url_write_data_php, output_filename, jsPsych.data.get().csv());
+        }
+    };
+    function on_close() {
+        debug_print("Executing `jsPsych.on_close` function");
+        if (jsPsych.data.get().values().length > 10) {
+            write_data_to_server(url_write_data_php, output_filename, jsPsych.data.get().csv());
+        }
+    };
+    function on_finish() {
+        debug_print("Executing `jsPsych.on_finish` function");
+        write_data_to_server(url_write_data_php, output_filename, jsPsych.data.get().csv());
+        window.location = url_completion;
+    };
+    var jsPsych = initJsPsych({
+        use_webaudio: false,
+        show_progress_bar: false,
+        auto_update_progress_bar: true,
+        override_safe_mode: false,
+        on_trial_finish: on_trial_finish,
+        //         on_close: on_close,
+        on_finish: on_finish,
+    });
+    // Set parameters for saving data alongside subject identifiers (filename is relative to save_data.php directory)
+    var url_experiment_dir = 'https://mcdermottlab.mit.edu/msaddler/msjspsych/';
+    var url_write_data_php = url_experiment_dir + 'write_data.php';
+    var id_random = jsPsych.randomization.randomID(10);
+    var id_subject = jsPsych.data.getURLVariable('PROLIFIC_PID'); // capture info from Prolific
+    var id_session = jsPsych.data.getURLVariable('SESSION_ID'); // capture info from Prolific
+    var id_study = jsPsych.data.getURLVariable('STUDY_ID'); // capture info from Prolific
+    var id_version = 0; // UPDATE THIS
+    var output_filename = `experiment_voice_discrimination/data/subj_${id_subject}.csv`; // UPDATE THIS
+    var url_completion = 'https://app.prolific.co/submissions/complete?cc=CSDB1BJJ'; // UPDATE THIS
+
+    var timeline_welcome = {
+        type: jsPsychInstructions,
+        pages: [
+            "<h2>This is a listening experiment that requires headphones</h2>" +
+            "<p><b>Disclaimer:</b> These listening tasks are part of a scientific research project. Your decision to complete these tasks is voluntary. There is no way for us to identify you. The only information we will have, in addition to your responses, is the time at which you completed the survey. The results of the research may be presented at scientific meetings or published in scientific journals. Clicking on the `Next` button at the bottom of this page indicates that you are at least 18 years of age, and agree to complete these tasks voluntarily.</p>" +
+            "<p><b>Please do not complete this task if you have participated in a voice recognition task with us in the past month</b></p>" +
+            "<p>This experiment consists of a demographic survey (<1 minute) and two listening tasks (~1 minute and ~45-65 minutes).</p>" +
+            "<p>Please do not refresh your browser on this webpage, as the webpage may think you have previously completed the tasks and terminate the experiment.</p>" +
+            "<p><b>Close attention is required throughout:</b> Failure to follow task instructions may lead to the experiment ending early and/or work being rejected.</p>",
+        ],
+        show_clickable_nav: true,
+    };
+
+    var timeline_main_experiment_instructions = {
+        type: jsPsychInstructions,
+        pages: [
+            "<h2>Odd-one-out voice recognition task:</h2>" +
+            "<p>In this experiment, you will listen to short excerpts of speech in noise.</p>" +
+            "<p>On each trial, you will hear three speech excerpts with brief silent gaps in between.</p>" +
+            "<p>The <b>three short speech excerpts</b> will be spoken by <b>two different talkers</b>.</p>" +
+            "<p>Your task is to judge which talker only spoke once, either the <b>FIRST</b> talker or the <b>LAST</b> talker.</p>" +
+            "<p>NOTE: On some trials it will be near-impossible to hear the talkers over the noise. Please try your best.</p>",
+
+            "<h2>Odd-one-out voice recognition task:</h2>" +
+            "<p>You will perform a total of 504 trials with varying levels of background noise.</p>" +
+            "<p>On each trial, two excerpts will always be from the the same talker and one from a different talker.</p>" +
+            "<p>The different talker can be either the <b>FIRST</b> talker (Example #1) or the <b>LAST</b> talker (Example #2).</p>" +
+            "<p>Your task is to indicate which talker only spoke once: <b>FIRST</b> or <b>LAST</b>.</p>" +
+            "<br>" +
+            "<p><b>Example trial #1</b>: 'sentence by talker A' -> 'sentence by talker B' -> 'sentence by talker B'</p>" +
+            "<p><b>Correct response</b>: The FIRST talker only spoke once</p>" +
+            "<p><b>Example trial #2</b>: 'sentence by talker C' -> 'sentence by talker C' -> 'sentence by talker D'</p>" +
+            "<p><b>Correct response</b>: The LAST talker only spoke once</p>",
+
+            "<h2>Odd-one-out voice recognition task</h2>" +
+            "<p>The task is designed to be challenging, so please complete the experiment in a quiet location where you will not be distracted by other sounds.</p>" +
+            "<p>You will only be able to provide your answer choice once the audio ends. Once you submit your response, the next trial will load.</p>" +
+            "<p>If you run into technical difficulties, DO NOT REFRESH the page as you will not be allowed to resume. Please return the study and message the experimenter.</p>" +
+            "<p>The first audio clip will play when you press `Next`. Remember, you can only hear each audio clip once.</p>" +
+            "<p><b>Which talker only spoke once (first or last)?</b><p>",
+        ],
+        show_clickable_nav: true,
+    };
+
+    n_trials = 480
+    n_catch_trials = 24
+    function get_timeline_variables() {
+        /**
+         * This function returns a list of timeline variables for
+         * the main experiment block. The variables are essentially
+         * just a list of stimuli and prompts to present in order.
+         */
+        var list_unique_index = arange(0, 503 + 1, 1); // Unique trial list
+        var list_unique_condition = arange(0, 15 + 1, 1); // Unique condition list
+        var list_index = [];
+        var list_condition = [];
+        while (list_index.length < n_trials) {
+            list_index.push(...jsPsych.randomization.repeat(list_unique_index, 1));
+        }
+        list_index = list_index.slice(0, n_trials);
+        while (list_condition.length < n_trials) {
+            list_condition.push(...jsPsych.randomization.repeat(list_unique_condition, 1));
+        }
+        list_condition = list_condition.slice(0, n_trials);
+        var stim_dir = 'stim/timit_ssn';
+        var timeline_variables = [];
+        for (var i = 0; i < n_trials; i += 1) {
+            var index = ('' + list_index[i]).padStart(3, '0');
+            var condition = ('' + list_condition[i]).padStart(2, '0');
+            timeline_variables.push({
+                stimulus: `${stim_dir}/condition${condition}/${index}.wav`,
+                catch_trial: 0,
+                correct_response: ((list_index[i] < 252) ? 1 : 0),
+            });
+        }
+
+        var list_catch_index = list_unique_index.filter(x => !list_index.includes(x)); // Use left-overs for catch trials
+//         var list_catch_index = arange(0, 503 + 1, 1); // Unique trial list for catch trials
+        list_catch_index = jsPsych.randomization.repeat(list_catch_index, 1).slice(0, n_catch_trials);
+        for (var i = 0; i < n_catch_trials; i += 1) {
+            var index = ('' + list_catch_index[i]).padStart(3, '0');
+            timeline_variables.push({
+                stimulus: `${stim_dir}/catch/${index}.wav`,
+                catch_trial: 1,
+                correct_response: ((list_catch_index[i] < 252) ? 1 : 0),
+            });
+        }
+
+        timeline_variables = jsPsych.randomization.repeat(timeline_variables, 1);
+        for (var i = 0; i < timeline_variables.length; i += 1) {
+            timeline_variables[i].trial_num = i;
+            timeline_variables[i].prompt_audio = [
+                '<p><b>Which talker only spoke once (first or last)?</b><p>' +
+                `<p><small>Trial ${i + 1} of ${timeline_variables.length}<small></p>`,
+            ];
+            timeline_variables[i].prompt_response = [
+                '<p><b>Which talker only spoke once (first or last)?</b></p>' +
+                `<p><small>Trial ${i + 1} of ${timeline_variables.length}<small></p>`,
+            ];
+        }
+        debug_print(timeline_variables);
+        return timeline_variables
+    }
+
+    var timeline_main_experiment_procedure = {
+        /** 
+         * This is the main experiment block.
+         * Pariticpants do one listening trial
+         * and then one response trial.
+         */
+        timeline: [
+            {
+                type: jsPsychAudioKeyboardResponse,
+                stimulus: jsPsych.timelineVariable('stimulus'),
+                choices: 'NO_KEYS',
+                prompt: jsPsych.timelineVariable('prompt_audio'),
+                response_ends_trial: true,
+                trial_ends_after_audio: true,
+            },
+            {
+                type: jsPsychHtmlButtonResponse,
+                stimulus: jsPsych.timelineVariable('prompt_response'),
+                choices: ['FIRST', 'LAST'],
+                prompt: "The __________ talker only spoke once.",
+                data: {
+                    catch_trial: jsPsych.timelineVariable('catch_trial'),
+                    correct_response: jsPsych.timelineVariable('correct_response'),
+                    stimulus: jsPsych.timelineVariable('stimulus'),
+                    trial_num: jsPsych.timelineVariable('trial_num'),
+                },
+                on_finish: function (data) {
+                    var correct = data.response == jsPsych.timelineVariable('correct_response');
+                    jsPsych.data.get().addToLast({ correct: correct ? 1 : 0 });
+                    var n_correct = jsPsych.data.get().filter({ correct: 1 }).count()
+                    var n_incorrect = jsPsych.data.get().filter({ correct: 0 }).count()
+                    jsPsych.data.get().addToLast({ n_correct: n_correct });
+                    jsPsych.data.get().addToLast({ n_incorrect: n_incorrect });
+                },
+            },
+            {
+                timeline: [{
+                    type: jsPsychHtmlButtonResponse,
+                    stimulus: function () {
+                        n_correct = jsPsych.data.get().last().values()[0].n_correct
+                        n_incorrect = jsPsych.data.get().last().values()[0].n_incorrect
+                        pct_correct = (100 * n_correct / (n_correct + n_incorrect)).toFixed(2)
+                        if (jsPsych.data.get().last().values()[0].correct) {
+                            feedback = [
+                                `<h3>Correct!</h3>` +
+                                `<p>Current score: ${n_correct} (${pct_correct}%)</p>` +
+                                `<p>Press NEXT to start next trial</p>`,
+                            ];
+                        } else {
+                            feedback = [
+                                `<h3>Incorrect</h3>` +
+                                `<p>Current score: ${n_correct} (${pct_correct}%)</p>` +
+                                `<p>Press NEXT to start next trial</p>`,
+                            ];
+                        }
+                        return feedback
+                    },
+                    choices: ['Next'],
+                    response_ends_trial: true,
+                }],
+                conditional_function: function () {
+                    return true
+                },
+            },
+        ],
+        timeline_variables: get_timeline_variables(),
+    };
+
+    var timeline_main_experiment_feedback = {
+        type: jsPsychSurveyText,
+        preamble: "<h2>You have completed the task.</h2>",
+        questions: [{
+            prompt: 'Please use this space to share any feedback. Did you experience any issues with the experiment?',
+            columns: 100,
+            rows: 3,
+        }],
+    };
+
+    var timeline_main_experiment_goodbye = {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: "<p>You have finished the last task.</p><p>Thank you for your time!</p>",
+        choices: ['Click here to return to Prolific and complete the study'],
+    };
+
+    var timeline_main_experiment = {
+        timeline: [
+            timeline_main_experiment_instructions,
+            timeline_main_experiment_procedure,
+            timeline_main_experiment_feedback,
+            timeline_main_experiment_goodbye,
+        ],
+        conditional_function: function () {
+            var hc_passed = jsPsych.data.get().last().values()[0].hc_passed
+            if (hc_passed === undefined) {
+                debug_print(`hc_passed is undefined, returning DEBUG_MODE=${DEBUG_MODE} as hc_passed`);
+                return DEBUG_MODE
+            }
+            return hc_passed
+        },
+    };
+
+    // Add subject metadata to jsPsych.data, build jsPsych experiment timeline, and run timeline
+    jsPsych.data.addProperties({
+        output_filename: output_filename,
+        id_random: id_random,
+        id_study: id_study,
+        id_subject: id_subject,
+        id_session: id_session,
+        id_version: id_version,
+    });
+    var timeline = [
+        { type: jsPsychPreload, auto_preload: true },
+        timeline_welcome,
+                ...get_timeline_preexisting_filename(url_experiment_dir + output_filename), // Ensure unique participants
+                ...get_timeline_survey(), // Include demographic survey timelines
+                ...get_timeline_calibration(), // Include audio calibration timelines
+                ...get_timeline_headphone_check(), // Include headphone check timelines
+        timeline_main_experiment,
+    ];
+    jsPsych.run(timeline);
+</script>
+
+</html>

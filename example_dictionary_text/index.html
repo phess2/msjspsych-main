@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Dictionary Text</title>
+    <meta http-equiv="pragma" content="no-cache">
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <link rel="stylesheet" href="../jspsych/dist/jspsych.css">
+
+    <script src="../jspsych/dist/jspsych.js"></script>
+    <script src="../jspsych/dist/plugin-instructions.js"></script>
+    <script src="../jspsych/dist/plugin-survey-multi-choice.js"></script>
+    <script src="../jspsych/dist/plugin-survey-text.js"></script>
+    <script src="../jspsych/dist/plugin-audio-button-response.js"></script>
+    <script src="../jspsych/dist/plugin-audio-keyboard-response.js"></script>
+    <script src="../jspsych/dist/plugin-html-button-response.js"></script>
+    <script src="../jspsych/dist/plugin-html-keyboard-response.js"></script>
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js'></script>
+
+    <script src="../util.js"></script>
+    <script src="../plugin-dictionary-text.js"></script>
+    <script src="dictionary_jsin_word_list.js"></script>
+</head>
+
+<body></body>
+
+<script>
+    var DEBUG_MODE = true;
+
+    var jsPsych = initJsPsych({
+        use_webaudio: false,
+        show_progress_bar: false,
+        auto_update_progress_bar: true,
+        override_safe_mode: false,
+        on_finish: function () {
+            jsPsych.data.displayData();
+        },
+    });
+
+    var word_response_trial = {
+        type: jsPsychDictionaryText,
+        prompt: [
+            '<p>Which word occurred at the middle of the audio clip?</p>' +
+            '<p>Type `?` to display the full list of options.</p>'
+        ],
+        dictionary: dictionary,
+        column_width: '200px',
+        columns: 6,
+    };
+
+    var timeline = [
+        // ...get_timeline_survey(),
+        word_response_trial,
+    ];
+    jsPsych.run(timeline);
+</script>
+
+</html>
