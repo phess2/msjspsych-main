@@ -27,34 +27,47 @@
 <body></body>
 
 <script>
-    var DEBUG_MODE = true;
+    const socket = new WebSocket("ws://mcdermottlab.local:8765")
+
+
 
     var jsPsych = initJsPsych({
         use_webaudio: false,
         show_progress_bar: false,
         auto_update_progress_bar: true,
         override_safe_mode: false,
-        on_finish: function () {
-            jsPsych.data.displayData();
-        },
     });
 
-    var word_response_trial = {
-        type: jsPsychDictionaryText,
-        prompt: [
-            '<p>Which word occurred at the middle of the audio clip?</p>' +
-            '<p>Type `?` to display the full list of options.</p>'
-        ],
-        dictionary: dictionary,
-        column_width: '200px',
-        columns: 6,
-    };
+    var trial = {
+        timeline: [
+            {
+            type: jsPsychDictionaryText,
+            prompt: [
+                '<p>Which word occurred at the middle of the audio clip?</p>' +
+                '<p>Type `?` to display the full list of options.</p>'
+            ],
+            dictionary: dictionary,
+            column_width: '200px',
+            columns: 5,
+            data: {stimulus: '/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/sounds/human_attn_experiment_v00/target_excerpts/above_mangst.wav',
+                correct_response: "above"
+            },
+            on_start: function(data) {
+                console.log("data:", data);
+                var stim = data.data.stimulus
+                var word = data.data.correct_response
+                socket.onopen = () => socket.send(JSON.stringify({stimulus: stim, correct: word}));
 
-    var timeline = [
-        // ...get_timeline_survey(),
-        word_response_trial,
-    ];
-    jsPsych.run(timeline);
+            },
+            on_finish: function (data) {
+                var wordResponse = data.response;
+                console.log("Trial_Response:", wordResponse);
+                socket.send(JSON.stringify({action: "response", response: wordResponse}));
+            }
+            },
+        ]
+        };
+    jsPsych.run([trial]);
 </script>
 
 </html>
