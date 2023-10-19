@@ -116,9 +116,13 @@
                     correct_response: jsPsych.timelineVariable('correct_response'),
                     trial_num: jsPsych.timelineVariable('trial_num'),
                 },
-                on_start: function (data) {
-                    var trial_ix = data.data.trial_num;
-                    socket.onopen = () => socket.send(JSON.stringify({action: "trial_start", trial_ix: trial_ix}));
+                on_start: function (trial) {
+                    var trial_ix = trial.data.trial_num;
+                    if (trial_ix == 0) {
+                        socket.onopen = () => socket.send(JSON.stringify({action: "trial_start", trial_ix: trial_ix}));
+                    } else{
+                        socket.send(JSON.stringify({action: "trial_start", trial_ix: trial_ix}));
+                    }
                 },
                 on_finish: function (data) {
                     var correct = data.response == jsPsych.timelineVariable('correct_response');
