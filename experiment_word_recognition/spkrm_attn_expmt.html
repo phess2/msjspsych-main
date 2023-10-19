@@ -135,7 +135,7 @@
             },
             {
                 timeline: [{
-                    type: jsPsychHtmlKeyboardResponse,
+                    type: jsPsychHtmlButtonResponse,
                     stimulus: function () {
                         n_correct = jsPsych.data.get().last().values()[0].n_correct
                         n_incorrect = jsPsych.data.get().last().values()[0].n_incorrect
@@ -155,7 +155,7 @@
                         }
                         return feedback
                     },
-                    choices: 'ALL_KEYS',
+                    choices: ['Next Trial'],
                     response_ends_trial: true,
                 }],
                 conditional_function: function () {
