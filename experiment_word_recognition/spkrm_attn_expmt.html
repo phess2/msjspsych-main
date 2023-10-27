@@ -20,7 +20,7 @@
     
     <script src="../main/util.js"></script>
     <script src="../main/plugin-dictionary-text.js"></script>
-    <script src="../root/key.js"></script>
+    <script src="../root/preston_pilot_key.js"></script>
     <script src="../root/dictionary_word_list_wsn.js"></script>
 
 </head>
@@ -97,6 +97,18 @@
         debug_print(timeline_variables);
         return timeline_variables
     }
+
+    var begin_experiment_trial = {
+                timeline: [{
+                    type: jsPsychHtmlButtonResponse,
+                    stimulus:[`<h3>Welcome!</h3>`],
+                    choices: ['Begin experiment'],
+                    response_ends_trial: true,
+                }],
+                conditional_function: function () {
+                    return true
+                },
+            }
 
     var timeline_main_experiment_procedure = {
         /** 
@@ -184,6 +196,7 @@
     //     id_version: id_version,
     // });
     var timeline = [
+            // begin_experiment_trial,
             timeline_main_experiment_procedure,
             timeline_main_experiment_goodbye,
         // timeline_welcome,

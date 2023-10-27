@@ -12,9 +12,10 @@ sys.path.append('/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/
 import ian_preston_new_min_runner as rn 
 import numpy as np
 import sounddevice as sd
+from pathlib import Path 
 
 # open trial manifest 
-with open("/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/experiment_pilot_manifest_trial_dict.pkl", 'rb') as f:
+with open("/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/preston_pilot_manifest_trial_dict.pkl", 'rb') as f:
     trial_dict = pickle.load(f)
 
 dev = speaker_utils.set_DAC()
@@ -23,7 +24,7 @@ print(f"{dev=}")
 if dev == "16A":
     asyncio.run(speaker_utils.force_unroute_all(speaker_config))
 
-break_soundsr, break_sound = wavfile.read('/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/SpeakerArray/assets/sounds/bell-ringing-04.wav')
+break_soundsr, break_sound = wavfile.read('/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/SpeakerArray/assets/sounds/three_tone.wav')
 block_start_soundsr, block_start_sound = wavfile.read('/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/SpeakerArray/assets/sounds/beep-01a.wav')
 break_sound = speaker_utils.rms_norm(break_sound, 60)
 block_start_sound = speaker_utils.rms_norm(block_start_sound, 60)
@@ -33,15 +34,23 @@ async def index(request):
         "/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_word_recognition/spkrm_attn_expmt.html"
     )
     
+output_dir = Path("/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_word_recognition/data")
+subject_id = "preston_pilot" # softcode eventually 
+output_dir.mkdir(parents=True, exist_ok=True)
+
+out_name = output_dir / f"{subject_id}.csv"
+
 async def echo(websocket):
     global speaker_config
     global break_sound
     global break_soundsr
     global block_start_soundsr
     global block_start_sound
+    global out_name
+    
     async for message in websocket:
         data = json.loads(message)
-        # print(f"got data from client: {data}")
+        print(f"got data from client: {data}")
         print(data)
         trial_ix = data.get("trial_ix", None)
         print(trial_ix)
@@ -49,10 +58,9 @@ async def echo(websocket):
         if trial_ix != None:
             trial_data = trial_dict[trial_ix]
             await rn.run_exp(trial_ix, trial_data, speaker_config, break_sound, break_soundsr, block_start_sound, block_start_soundsr, block_length=90)
-
-
-        # elif data.get("data", False):
-        #     print(data.get("data"))
+        if data['action'] == 'store_data':
+            exp_data = pd.DataFrame(json.loads(data['data']))
+            exp_data.to_csv(out_name)
             
     
 async def start_server():
@@ -66,9 +74,9 @@ async def start_server():
     site = web.TCPSite(server, "mcdermottlab.local", 9090)
     await site.start()
 
-    ws_server = websockets.serve(echo, "mcdermottlab.local", 8765)
+    ws_server = websockets.serve(echo, "mcdermottlab.local", 8765, ping_interval=None)
     asyncio.ensure_future(ws_server)
-    
+
     await asyncio.Future() # run forever
     
 
