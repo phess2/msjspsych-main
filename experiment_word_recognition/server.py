@@ -14,30 +14,72 @@ import numpy as np
 import sounddevice as sd
 from pathlib import Path 
 
+"""
+Before running, make a new manifest and trial dict using `gen_participant_trials.ipynb`
+Then proceed with launching server
+
+Checklist of changes to make to this file to run a new participant:
+1. Update PART_IX to match new manifest you just generated.
+2. ensure experiment paths are correct (are you piloting? Is this the main run?)
+3. Source correct work answer key in `spkrm_attn_expmt.html`:
+    1. change key path:
+    <script src="../root/expmt_keys/participant_<ix>_key.js"></script>
+    2. update number for trials to match:
+        n_trials = <num_trials> 
+        
+"""
+
+##################################
+# SET EXPERIMENT PARAMS AND VARS
+##################################
+DB_SPL = 70
+BLOCK_LEN = 50 
+
+PART_IX = 1
+EXP_DIR = Path("speaker_array_manifests")
+PART_NAME = f"participant_{PART_IX:03d}"
+EXPMT_TRIAL_DICT_NAME = f"pilot_v02/{PART_NAME}_pilot_azimiuth_expt_v02_trial_dict.pkl"
+
+# params that could but usually shouldn't change 
+EXPMT_TRIAL_DICT_DIR = Path("/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_word_recognition/speaker_array_manifests")
+EXPMT_TRIAL_DICT_PATH = EXPMT_TRIAL_DICT_DIR / EXPMT_TRIAL_DICT_NAME
 # open trial manifest 
-with open("/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/new_exp_pilot_manifest_trial_dict.pkl", 'rb') as f:
+with open(EXPMT_TRIAL_DICT_PATH, 'rb') as f:
     trial_dict = pickle.load(f)
+    
+# Set output data save path
+output_dir = Path("/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_word_recognition/data")
+output_dir.mkdir(parents=True, exist_ok=True)
+
+out_name = output_dir / f"{PART_NAME}.csv"
+    
+###################
+# Set up speaker IO
+################### 
 dev = speaker_utils.set_DAC()
 speaker_config = speaker_utils.create_speaker_config('/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/SpeakerArray/assets/Layouts/NewSpeakerLayoutUpdate.csv')
 print(f"{dev=}")
 if dev == "16A":
     asyncio.run(speaker_utils.force_unroute_all(speaker_config))
-
+    
+# set break and block sound paths and levels 
 break_soundsr, break_sound = wavfile.read('/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/SpeakerArray/assets/sounds/three_tone.wav')
 block_start_soundsr, block_start_sound = wavfile.read('/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/SpeakerArray/assets/sounds/beep-01a.wav')
-break_sound = speaker_utils.rms_norm(break_sound, 70)
-block_start_sound = speaker_utils.rms_norm(block_start_sound, 70)
+break_sound = speaker_utils.rms_norm(break_sound, DB_SPL)
+block_start_sound = speaker_utils.rms_norm(block_start_sound, DB_SPL)
+
+#################
+# Init html paths
+#################
 
 async def index(request):
     return web.FileResponse(
         "/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_word_recognition/spkrm_attn_expmt.html"
     )
-    
-output_dir = Path("/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_word_recognition/data")
-subject_id = "new_exp_pilot" # softcode eventually 
-output_dir.mkdir(parents=True, exist_ok=True)
 
-out_name = output_dir / f"{subject_id}.csv"
+################################################
+# Init main call/response fetching via websocket 
+################################################
 
 async def echo(websocket):
     global speaker_config
@@ -56,17 +98,20 @@ async def echo(websocket):
         print('\n')
         if trial_ix != None:
             trial_data = trial_dict[trial_ix]
-            await rn.run_exp(trial_ix, trial_data, speaker_config, break_sound, break_soundsr, block_start_sound, block_start_soundsr, block_length=50)
+            await rn.run_exp(trial_ix, trial_data, speaker_config, break_sound, break_soundsr, block_start_sound, block_start_soundsr, block_length=BLOCK_LEN)
         if data['action'] == 'store_data':
             exp_data = pd.DataFrame(json.loads(data['data']))
             exp_data.to_csv(out_name)
 
+###############
+# Launch Server 
+###############
 
 async def start_server():
     app = web.Application()
     app.add_routes([web.get("/", index), 
                     web.static("/jspsych/", "/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/jspsych"),
-                    web.static("/root/", "/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_word_recognition"),#])
+                    web.static("/root/", "/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_word_recognition"),
                     web.static("/main/", "/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/")])
     server = web.AppRunner(app)
     await server.setup()
