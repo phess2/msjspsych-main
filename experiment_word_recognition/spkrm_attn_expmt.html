@@ -20,7 +20,7 @@
     
     <script src="../main/util.js"></script>
     <script src="../main/plugin-dictionary-text.js"></script>
-    <script src="../root/ian_pilot_key.js"></script>
+    <script src="../root/new_exp_plot_key.js"></script>
     <script src="../root/dictionary_word_list_wsn.js"></script>
 
 </head>
@@ -72,7 +72,7 @@
     // var output_filename = `experiment_word_recognition/data/subj_${id_subject}.json`; // UPDATE THIS
     
 
-    n_trials = 360
+    n_trials = 150
 
     function get_timeline_variables() {
         /**
@@ -129,7 +129,13 @@
                 },
                 on_start: function (trial) {
                     var trial_ix = trial.data.trial_num;
-                    socket.onopen = () => socket.send(JSON.stringify({action: "trial_start", trial_ix: trial_ix}));
+                    if (trial_ix == 0) {
+                        socket.onopen = () => socket.send(JSON.stringify({action: "trial_start", trial_ix: trial_ix}));
+                        } else {
+                            socket.send(JSON.stringify({action: "trial_start", trial_ix: trial_ix}))
+                        }
+                    // socket.onopen = () => socket.send(JSON.stringify({action: "trial_start", trial_ix: trial_ix}));
+                    console.log('on trial start');
                 },
                 on_finish: function (data) {
                     var correct = data.response == jsPsych.timelineVariable('correct_response');
