@@ -106,4 +106,12 @@ venv.bak/
 # SLURM
 *.out
 
+# Local data
 *.wav
+*.pkl
+*.csv
+
+*.pkl
+*.csv
+*.json
+

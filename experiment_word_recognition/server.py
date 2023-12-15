@@ -14,6 +14,9 @@ import numpy as np
 import sounddevice as sd
 from pathlib import Path 
 
+# TODO: Fix bug where mixtures don't play 
+# Check rn.run_exp to make sure target + mixture made correctly 
+
 """
 Before running, make a new manifest and trial dict using `gen_participant_trials.ipynb`
 Then proceed with launching server
@@ -32,8 +35,8 @@ Checklist of changes to make to this file to run a new participant:
 ##################################
 # SET EXPERIMENT PARAMS AND VARS
 ##################################
-DB_SPL = 70
-BLOCK_LEN = 50 
+DB_SPL = 65
+BLOCK_LEN = 35 
 
 PART_IX = 1
 EXP_DIR = Path("speaker_array_manifests")
@@ -46,7 +49,7 @@ EXPMT_TRIAL_DICT_PATH = EXPMT_TRIAL_DICT_DIR / EXPMT_TRIAL_DICT_NAME
 # open trial manifest 
 with open(EXPMT_TRIAL_DICT_PATH, 'rb') as f:
     trial_dict = pickle.load(f)
-    
+
 # Set output data save path
 output_dir = Path("/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_word_recognition/data")
 output_dir.mkdir(parents=True, exist_ok=True)
@@ -88,17 +91,23 @@ async def echo(websocket):
     global block_start_soundsr
     global block_start_sound
     global out_name
-    print(websocket)
+
     async for message in websocket:
         data = json.loads(message)
         print(f"got data from client: {data}")
-        print(data)
         trial_ix = data.get("trial_ix", None)
         print(trial_ix)
         print('\n')
         if trial_ix != None:
             trial_data = trial_dict[trial_ix]
-            await rn.run_exp(trial_ix, trial_data, speaker_config, break_sound, break_soundsr, block_start_sound, block_start_soundsr, block_length=BLOCK_LEN)
+            await rn.run_exp(trial_ix,
+                             trial_data,
+                             speaker_config,
+                             break_sound,
+                             break_soundsr,
+                             block_start_sound,
+                             block_start_soundsr,
+                             block_length=BLOCK_LEN)
         if data['action'] == 'store_data':
             exp_data = pd.DataFrame(json.loads(data['data']))
             exp_data.to_csv(out_name)
@@ -118,12 +127,10 @@ async def start_server():
     site = web.TCPSite(server, "mcdermottlab.local", 9090)
     await site.start()
 
-    ws_server = websockets.serve(echo, "mcdermottlab.local", 8765)
+    ws_server = websockets.serve(echo, "mcdermottlab.local", 8765, ping_interval=None)
     asyncio.ensure_future(ws_server)
 
     await asyncio.Future() # run forever
     
-
-
 if __name__ == "__main__":
     asyncio.run(start_server())
