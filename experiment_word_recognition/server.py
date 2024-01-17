@@ -100,6 +100,7 @@ async def echo(websocket):
         print('\n')
         if trial_ix != None:
             trial_data = trial_dict[trial_ix]
+            print(f"trial data: \n {trial_data}")
             await rn.run_exp(trial_ix,
                              trial_data,
                              speaker_config,
