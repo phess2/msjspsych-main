@@ -36,25 +36,28 @@ Checklist of changes to make to this file to run a new participant:
 # SET EXPERIMENT PARAMS AND VARS
 ##################################
 DB_SPL = 65
-BLOCK_LEN = 35 
+BLOCK_LEN = 28 # 28 for new rel expmt 35 for old abs  
 
-PART_IX = 1
+PART_IX = 2
 EXP_DIR = Path("speaker_array_manifests")
 PART_NAME = f"participant_{PART_IX:03d}"
-EXPMT_TRIAL_DICT_NAME = f"pilot_v02/{PART_NAME}_pilot_azimiuth_expt_v02_trial_dict.pkl"
+EXP_TYPE = "pilot_rel_dist_azim_elev_v00"  # Name of sub directory to save experiment results - should match dir of trial dicts!
+
+EXPMT_TRIAL_DICT_NAME = f"{EXP_TYPE}/{PART_NAME}_pilot_trial_dict.pkl"
 
 # params that could but usually shouldn't change 
 EXPMT_TRIAL_DICT_DIR = Path("/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_word_recognition/speaker_array_manifests")
 EXPMT_TRIAL_DICT_PATH = EXPMT_TRIAL_DICT_DIR / EXPMT_TRIAL_DICT_NAME
 # open trial manifest 
+print(f"Running trial dict {EXPMT_TRIAL_DICT_PATH}")
 with open(EXPMT_TRIAL_DICT_PATH, 'rb') as f:
     trial_dict = pickle.load(f)
 
 # Set output data save path
 output_dir = Path("/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_word_recognition/data")
+output_dir = output_dir / EXP_TYPE 
 output_dir.mkdir(parents=True, exist_ok=True)
-
-out_name = output_dir / f"{PART_NAME}.csv"
+out_name = output_dir/ f"{PART_NAME}.csv"
     
 ###################
 # Set up speaker IO
@@ -112,6 +115,7 @@ async def echo(websocket):
         if data['action'] == 'store_data':
             exp_data = pd.DataFrame(json.loads(data['data']))
             exp_data.to_csv(out_name)
+    return None
 
 ###############
 # Launch Server 

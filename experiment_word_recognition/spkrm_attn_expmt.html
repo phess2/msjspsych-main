@@ -20,7 +20,8 @@
     
     <script src="../main/util.js"></script>
     <script src="../main/plugin-dictionary-text.js"></script>
-    <script src="../root/expmt_keys/participant_001_key.js"></script>
+    <!-- MAKE SURE TO UPDATE NAME OF PARTICIPANT ANSWER KEY -->
+    <script src="../root/expmt_keys/pilot_rel_dist_azim_elev_v00_participant_002_key.js"></script>
     <script src="../root/dictionary_word_list_wsn.js"></script>
 
 </head>
@@ -31,6 +32,8 @@
 
     // websockt set up
     const socket = new WebSocket("ws://mcdermottlab.local:8765")
+    // MAKE SURE N_TRIALS MATCHES PARTICIPANT DICT
+    n_trials = 168
 
     // get list of correct responses 
 
@@ -72,7 +75,6 @@
     // var output_filename = `experiment_word_recognition/data/subj_${id_subject}.json`; // UPDATE THIS
     
 
-    n_trials = 210
 
     function get_timeline_variables() {
         /**
