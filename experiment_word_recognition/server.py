@@ -36,12 +36,12 @@ Checklist of changes to make to this file to run a new participant:
 # SET EXPERIMENT PARAMS AND VARS
 ##################################
 DB_SPL = 65
-BLOCK_LEN = 28 # 28 for new rel expmt 35 for old abs  
+BLOCK_LEN = 35 # 35 for v01 and old expmnts 28 for v00 relative dist exp. 
 
-PART_IX = 2
+PART_IX = 1
 EXP_DIR = Path("speaker_array_manifests")
 PART_NAME = f"participant_{PART_IX:03d}"
-EXP_TYPE = "pilot_rel_dist_azim_elev_v00"  # Name of sub directory to save experiment results - should match dir of trial dicts!
+EXP_TYPE = "pilot_rel_dist_azim_elev_v01"  # Name of sub directory to save experiment results - should match dir of trial dicts!
 
 EXPMT_TRIAL_DICT_NAME = f"{EXP_TYPE}/{PART_NAME}_pilot_trial_dict.pkl"
 
@@ -97,7 +97,7 @@ async def echo(websocket):
 
     async for message in websocket:
         data = json.loads(message)
-        print(f"got data from client: {data}")
+        # print(f"got data from client: {data}")
         trial_ix = data.get("trial_ix", None)
         print(trial_ix)
         print('\n')
