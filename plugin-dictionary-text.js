@@ -54,6 +54,7 @@ function dictionary_lookup(dictionary_str, button_text, columns=5, column_width=
                 cell.innerHTML = dictionary_subset[itr_cell];
                 cell.style.width = column_width;
                 row.appendChild(cell);
+                
             }
             itr_cell += 1;
         }
