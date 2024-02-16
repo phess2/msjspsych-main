@@ -38,7 +38,7 @@ Checklist of changes to make to this file to run a new participant:
 DB_SPL = 65
 BLOCK_LEN = 35 # 35 for v01 and old expmnts 28 for v00 relative dist exp. 
 
-PART_IX = 1
+PART_IX = 6
 EXP_DIR = Path("speaker_array_manifests")
 PART_NAME = f"participant_{PART_IX:03d}"
 EXP_TYPE = "pilot_rel_dist_azim_elev_v01"  # Name of sub directory to save experiment results - should match dir of trial dicts!
