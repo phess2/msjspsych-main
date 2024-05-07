@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Listening Experiment</title>
+    <meta http-equiv="pragma" content="no-cache">
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <link rel="stylesheet" href="../jspsych/dist/jspsych.css">
+    <script src="../jspsych/dist/jspsych.js"></script>
+    <script src="../jspsych/dist/plugin-preload.js"></script>
+    <script src="../jspsych/dist/plugin-instructions.js"></script>
+    <script src="../jspsych/dist/plugin-survey-multi-select.js"></script>
+    <script src="../jspsych/dist/plugin-survey-multi-choice.js"></script>
+    <script src="../jspsych/dist/plugin-survey-text.js"></script>
+    <script src="../jspsych/dist/plugin-audio-button-response.js"></script>
+    <script src="../jspsych/dist/plugin-audio-keyboard-response.js"></script>
+    <script src="../jspsych/dist/plugin-html-button-response.js"></script>
+    <script src="../jspsych/dist/plugin-html-keyboard-response.js"></script>
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js'></script>
+
+    <script src="../main/util.js"></script>
+    <script src="../main/plugin-dictionary-text.js"></script>
+    <script src="../root/expmt_keys/pilot_thresholds_v00_participant_001_key.js"></script>
+    <script src="../root/dictionary_word_list_cv.js"></script>
+    <!-- MAKE SURE TO UPDATE NAME OF PARTICIPANT ANSWER KEY -->
+</head>
+
+<body></body>
+
+<script>
+    // websockt set up
+    const socket = new WebSocket("ws://mcdermottlab.local:8765")
+    // MAKE SURE N_TRIALS MATCHES PARTICIPANT DICT
+    n_trials = 480
+
+
+    // Initalize jsPsych object and experiment timeline
+    function on_trial_finish() {
+        debug_print("Executing `jsPsych.on_trial_finish` function");
+        socket.send(JSON.stringify({action: 'store_data', data: jsPsych.data.get().json()}));
+    };
+    function on_close() {
+        debug_print("Executing `jsPsych.on_close` function");
+        socket.send(JSON.stringify({action: 'store_data', data: jsPsych.data.get().json()}));
+
+    };
+    function on_finish() {
+        debug_print("Executing `jsPsych.on_finish` function");
+        socket.send(JSON.stringify({action: 'store_data', data: jsPsych.data.get().json()}));
+        window.location = url_completion;
+    };
+
+    var jsPsych = initJsPsych({
+        use_webaudio: false,
+        show_progress_bar: false,
+        auto_update_progress_bar: true,
+        override_safe_mode: false,
+        on_trial_finish: on_trial_finish,
+//         on_close: on_close,
+        on_finish: on_finish,
+    });
+    // Set parameters for saving data alongside subject identifiers (filename is relative to save_data.php directory)
+    // var url_experiment_dir = 'https://mcdermottlab.mit.edu/msaddler/msjspsych/';
+    // var path_to_stimuli = "/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/sounds";
+    // var url_write_data_php = url_experiment_dir + 'write_data.php';
+    // var id_random = jsPsych.randomization.randomID(10);
+    // var id_subject = jsPsych.data.getURLVariable('PROLIFIC_PID'); // capture info from Prolific
+    // var id_session = jsPsych.data.getURLVariable('SESSION_ID'); // capture info from Prolific
+    // var id_study = jsPsych.data.getURLVariable('STUDY_ID'); // capture info from Prolific
+    // var id_version = 0; // UPDATE THIS
+    // var output_filename = `experiment_word_recognition/data/subj_${id_subject}.json`; // UPDATE THIS
+
+
+    async function get_timeline_variables() {
+        /**
+         * This function returns a list of timeline variables for
+         * the main experiment block. The variables are essentially
+         * just a list of stimuli and prompts to present in order.
+         */
+        var timeline_variables = [];
+        for (var i = 0; i < n_trials; i += 1) {
+            var index = 
+            timeline_variables.push({
+                correct_response: key[i],
+                trial_num: i,
+                prompt_response: [
+                '<p><b>Which word appeared in the middle of the clip (i.e., overlapped the midpoint of the clip)?</b><p>' +
+                '<p>Type `?` to display the full list of possible words.</p>' +
+                `<p><small>Trial ${i + 1} of ${n_trials}<small></p>`,
+                ]
+            });
+        }
+        debug_print(timeline_variables);
+        return timeline_variables
+    }
+
+    var begin_experiment_trial = {
+                timeline: [{
+                    type: jsPsychHtmlButtonResponse,
+                    stimulus:[`<h3>Welcome!</h3>`],
+                    choices: ['Begin experiment'],
+                    response_ends_trial: true,
+                }],
+                conditional_function: function () {
+                    return true
+                },
+            }
+
+    var timeline_main_experiment_procedure = {
+        /** 
+         * This is the main experiment block.
+         * Pariticpants do one listening trial
+         * and then one response trial.
+         */
+        timeline: [
+            {
+                type: jsPsychDictionaryText,
+                prompt: jsPsych.timelineVariable('prompt_response'),
+                dictionary: dictionary,
+                size: 80,
+                columns: 5,
+                column_width: '1000px',
+                data: {
+                    correct_response: jsPsych.timelineVariable('correct_response'),
+                    trial_num: jsPsych.timelineVariable('trial_num'),
+                },
+                on_start: function (trial) {
+                    var trial_ix = trial.data.trial_num;
+                    if (trial_ix == 0) {
+                        socket.onopen = () => socket.send(JSON.stringify({action: "trial_start", trial_ix: trial_ix}));
+                        } else {
+                            socket.send(JSON.stringify({action: "trial_start", trial_ix: trial_ix}))
+                        }
+                    // socket.onopen = () => socket.send(JSON.stringify({action: "trial_start", trial_ix: trial_ix}));
+                    console.log('on trial start');
+                },
+                on_finish: function (data) {
+                    var correct = data.response == jsPsych.timelineVariable('correct_response');
+                    jsPsych.data.get().addToLast({ correct: correct ? 1 : 0 });
+                    var n_correct = jsPsych.data.get().filter({ correct: 1 }).count()
+                    var n_incorrect = jsPsych.data.get().filter({ correct: 0 }).count()
+                    jsPsych.data.get().addToLast({ n_correct: n_correct });
+                    jsPsych.data.get().addToLast({ n_incorrect: n_incorrect });
+                },
+            },
+            {
+                timeline: [{
+                    type: jsPsychHtmlButtonResponse,
+                    stimulus: function () {
+                        n_correct = jsPsych.data.get().last().values()[0].n_correct
+                        n_incorrect = jsPsych.data.get().last().values()[0].n_incorrect
+                        pct_correct = (100 * n_correct / (n_correct + n_incorrect)).toFixed(2)
+                        if (jsPsych.data.get().last().values()[0].correct) {
+                            feedback = [
+                                `<h3>Correct!</h3>` +
+                                `<p>Current score: ${n_correct} (${pct_correct}%)</p>` +
+                                `<p>Press ANY KEY to start next trial</p>`,
+                            ];
+                        } else {
+                             feedback = [
+                                `<h3>The correct response was "${jsPsych.timelineVariable('correct_response')}"</h3>` +
+                                `<p>Current score: ${n_correct} (${pct_correct}%)</p>` +
+                                `<p>Press ANY KEY to start next trial</p>`,
+                            ];
+                        }
+                        return feedback
+                    },
+                    choices: ['Next Trial'],
+                    response_ends_trial: true,
+                }],
+                conditional_function: function () {
+                    return true
+                },
+            },
+        ],
+        timeline_variables: get_timeline_variables(),
+    };
+
+
+    var timeline_main_experiment_goodbye = {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: "<p>You have finished the last task.</p><p>Thank you for your time!</p>",
+        choices: [''],
+    };
+
+
+    // Add subject metadata to jsPsych.data, build jsPsych experiment timeline, and run timeline
+    // jsPsych.data.addProperties({
+    //     output_filename: output_filename,
+    //     id_random: id_random,
+    //     id_study: id_study,
+    //     id_subject: id_subject,
+    //     id_session: id_session,
+    //     id_version: id_version,
+    // });
+    var timeline = [
+            // begin_experiment_trial,
+            timeline_main_experiment_procedure,
+            timeline_main_experiment_goodbye,
+        // timeline_welcome,
+        // ...get_timeline_preexisting_filename(url_experiment_dir + output_filename), // Ensure unique participants
+        // ...get_timeline_survey(), // Include demographic survey timelines
+        // ...get_timeline_calibration(), // Include audio calibration timelines
+        // ...get_timeline_headphone_check(), // Include headphone check timelines
+    ];
+    jsPsych.run(timeline);
+</script>
+
+</html>
