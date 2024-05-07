@@ -17,21 +17,25 @@
     <script src="../jspsych/dist/plugin-html-button-response.js"></script>
     <script src="../jspsych/dist/plugin-html-keyboard-response.js"></script>
     <script src='https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js'></script>
-
+    
     <script src="../main/util.js"></script>
     <script src="../main/plugin-dictionary-text.js"></script>
+    <!-- MAKE SURE TO UPDATE NAME OF PARTICIPANT ANSWER KEY -->
     <script src="../root/expmt_keys/pilot_thresholds_v00_participant_001_key.js"></script>
     <script src="../root/dictionary_word_list_cv.js"></script>
-    <!-- MAKE SURE TO UPDATE NAME OF PARTICIPANT ANSWER KEY -->
+
 </head>
 
 <body></body>
 
 <script>
+
     // websockt set up
     const socket = new WebSocket("ws://mcdermottlab.local:8765")
     // MAKE SURE N_TRIALS MATCHES PARTICIPANT DICT
     n_trials = 480
+
+    // get list of correct responses 
 
 
     // Initalize jsPsych object and experiment timeline
@@ -69,9 +73,10 @@
     // var id_study = jsPsych.data.getURLVariable('STUDY_ID'); // capture info from Prolific
     // var id_version = 0; // UPDATE THIS
     // var output_filename = `experiment_word_recognition/data/subj_${id_subject}.json`; // UPDATE THIS
+    
 
 
-    async function get_timeline_variables() {
+    function get_timeline_variables() {
         /**
          * This function returns a list of timeline variables for
          * the main experiment block. The variables are essentially
