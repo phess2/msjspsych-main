@@ -9,7 +9,7 @@ import sys
 sys.path.append('/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/SpeakerArray/src')
 from utils import speaker_utils
 sys.path.append('/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/SpeakerArray/scripts/exp_runners')
-import ian_preston_new_min_runner as rn
+import ian_preston_threshold_runner as rn
 # import ian_preston_rel_elev_runner as rn 
 import numpy as np
 import sounddevice as sd
@@ -55,7 +55,7 @@ with open(EXPMT_TRIAL_DICT_PATH, 'rb') as f:
     trial_dict = pickle.load(f)
 
 # Set output data save path
-output_dir = Path("/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_word_recognition/data")
+output_dir = Path("/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_spatial_word_recognition_thresholds/data")
 output_dir = output_dir / EXP_TYPE 
 output_dir.mkdir(parents=True, exist_ok=True)
 out_name = output_dir/ f"{PART_NAME}.csv"
@@ -81,7 +81,7 @@ block_start_sound = speaker_utils.rms_norm(block_start_sound, DB_SPL)
 
 async def index(request):
     return web.FileResponse(
-        "/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_word_recognition/spkrm_attn_expmt.html"
+        "/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_spatial_word_recognition_thresholds/threshold_expmt.html"
     )
 
 ################################################
@@ -126,7 +126,7 @@ async def start_server():
     app = web.Application()
     app.add_routes([web.get("/", index), 
                     web.static("/jspsych/", "/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/jspsych"),
-                    web.static("/root/", "/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_word_recognition"),
+                    web.static("/root/", "/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_spatial_word_recognition_thresholds"),
                     web.static("/main/", "/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/")])
     server = web.AppRunner(app)
     await server.setup()

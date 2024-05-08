@@ -21,7 +21,7 @@
     <script src="../main/util.js"></script>
     <script src="../main/plugin-dictionary-text.js"></script>
     <!-- MAKE SURE TO UPDATE NAME OF PARTICIPANT ANSWER KEY -->
-    <script src="../root/expmt_keys/pilot_rel_dist_azim_elev_v01_participant_006_key.js"></script>
+    <script src="../root/expmt_keys/front_back_exp_v01_participant_002_key.js"></script>
     <script src="../root/dictionary_word_list_wsn.js"></script>
 
 </head>
@@ -33,7 +33,7 @@
     // websockt set up
     const socket = new WebSocket("ws://mcdermottlab.local:8765")
     // MAKE SURE N_TRIALS MATCHES PARTICIPANT DICT
-    n_trials = 175
+    n_trials = 260
 
     // get list of correct responses 
 
@@ -82,7 +82,7 @@
          * the main experiment block. The variables are essentially
          * just a list of stimuli and prompts to present in order.
          */
-         var timeline_variables = [];
+        var timeline_variables = [];
         for (var i = 0; i < n_trials; i += 1) {
             var index = 
             timeline_variables.push({
