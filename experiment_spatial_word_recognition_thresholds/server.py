@@ -60,8 +60,8 @@ output_dir = Path("/Users/mcdermottspeakerarray/Documents/binaural_cocktail_part
 output_dir = output_dir / EXP_TYPE 
 output_dir.mkdir(parents=True, exist_ok=True)
 out_name = output_dir/ f"{PART_NAME}.csv"
-# if out_name.exists():
-#     raise FileExistsError("{out_name} already exists! Did you forget to update the participant number variable, PART_IX?")
+if out_name.exists():
+    raise FileExistsError("{out_name} already exists! Did you forget to update the participant number variable, PART_IX?")
     
 ###################
 # Set up speaker IO
