@@ -1,3 +1,11 @@
+function Get(yourUrl){
+    var Httpreq = new XMLHttpRequest(); // a new request                                                 
+    Httpreq.open("GET",yourUrl,false);
+    Httpreq.send(null);
+    return Httpreq.responseText;
+  };
+
+
 function get_timeline_survey() {
     /**
      * Returns jsPsych timeline (list of survey trials) for standard McDermott Lab demographic survey.

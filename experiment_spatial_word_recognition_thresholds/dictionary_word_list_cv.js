@@ -105,7 +105,6 @@ var dictionary = [
     "cemetery",
     "center",
     "central",
-    "centre",
     "certain",
     "change",
     "changed",

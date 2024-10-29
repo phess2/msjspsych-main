@@ -36,17 +36,17 @@ Checklist of changes to make to this file to run a new participant:
 # SET EXPERIMENT PARAMS AND VARS
 ##################################
 DB_SPL = 65
-BLOCK_LEN = 80
+BLOCK_LEN = 60
 
-PART_IX = 25
-EXP_DIR = Path("speaker_array_manifests")
+PART_IX = 1
+EXP_DIR = Path("loc_separation_speaker_array_manifests")
 PART_NAME = f"participant_{PART_IX:03d}"
-EXP_TYPE = "thresholds_v02"  # Name of sub directory to save experiment results - should match dir of trial dicts!
+EXP_TYPE = "loc_separation"  # Name of sub directory to save experiment results - should match dir of trial dicts!
 
-EXPMT_TRIAL_DICT_NAME = f"{EXP_TYPE}/{PART_NAME}_pilot_trial_dict.pkl"
+EXPMT_TRIAL_DICT_NAME = f"{EXP_TYPE}/{PART_NAME}_trial_dict.pkl"
 
 # params that could but usually shouldn't change 
-EXPMT_TRIAL_DICT_DIR = Path("/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_spatial_word_recognition_thresholds/speaker_array_manifests")
+EXPMT_TRIAL_DICT_DIR = Path("/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_spatial_word_recognition_thresholds/loc_separation_speaker_array_manifests")
 EXPMT_TRIAL_DICT_PATH = EXPMT_TRIAL_DICT_DIR / EXPMT_TRIAL_DICT_NAME
 # open trial manifest 
 print(f"Running trial dict {EXPMT_TRIAL_DICT_PATH}")
@@ -56,7 +56,7 @@ with open(EXPMT_TRIAL_DICT_PATH, 'rb') as f:
 # print(trial_dict)
 
 # Set output data save path
-output_dir = Path("/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_spatial_word_recognition_thresholds/data")
+output_dir = Path("/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_spatial_word_recognition_thresholds/loc_sep_data")
 output_dir = output_dir / EXP_TYPE 
 output_dir.mkdir(parents=True, exist_ok=True)
 out_name = output_dir/ f"{PART_NAME}.csv"
@@ -84,7 +84,7 @@ block_start_sound = speaker_utils.set_dba_level(block_start_sound, DB_SPL)
 
 async def index(request):
     return web.FileResponse(
-        "/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_spatial_word_recognition_thresholds/threshold_expmt.html"
+        "/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_spatial_word_recognition_thresholds/localization_check.html"
     )
 
 ################################################
@@ -141,10 +141,10 @@ async def start_server():
                     web.static("/main/", "/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/")])
     server = web.AppRunner(app)
     await server.setup()
-    site = web.TCPSite(server, "mcdermottlab.local", 9091)
+    site = web.TCPSite(server, "mcdermottlab.local", 9092)
     await site.start()
 
-    ws_server = websockets.serve(echo, "mcdermottlab.local", 8765, ping_interval=None)
+    ws_server = websockets.serve(echo, "mcdermottlab.local", 8766, ping_interval=None)
     asyncio.ensure_future(ws_server)
 
     await asyncio.Future() # run forever

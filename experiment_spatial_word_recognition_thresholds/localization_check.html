@@ -21,7 +21,7 @@
     <script src="../main/util.js"></script>
     <script src="../main/plugin-dictionary-text.js"></script>
     <!-- MAKE SURE TO UPDATE NAME OF PARTICIPANT ANSWER KEY -->
-    <script src="../root/expmt_keys/thresholds_v02_participant_025_key.js"></script>
+    <!-- <script src="../root/expmt_keys/thresholds_v02_participant_025_key.js"></script> -->
     <script src="../root/dictionary_word_list_cv.js"></script>
 
 </head>
@@ -31,13 +31,14 @@
 <script>
 
     // websockt set up
-    const socket = new WebSocket("ws://mcdermottlab.local:8765")
+    const socket = new WebSocket("ws://mcdermottlab.local:8766")
     // MAKE SURE N_TRIALS MATCHES PARTICIPANT DICT
-    n_trials = 480
+    n_trials = 60
     resume = false; 
     resume_ix = 0;
     // get list of correct responses 
-
+    var key = JSON.parse(Get("../root/loc_sep_expmt_keys/loc_separation_participant_001_key.json"))
+    console.log(key)
 
     // Initalize jsPsych object and experiment timeline
     function on_trial_finish() {
@@ -64,18 +65,6 @@
 //         on_close: on_close,
         on_finish: on_finish,
     });
-    // Set parameters for saving data alongside subject identifiers (filename is relative to save_data.php directory)
-    // var url_experiment_dir = 'https://mcdermottlab.mit.edu/msaddler/msjspsych/';
-    // var path_to_stimuli = "/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/sounds";
-    // var url_write_data_php = url_experiment_dir + 'write_data.php';
-    // var id_random = jsPsych.randomization.randomID(10);
-    // var id_subject = jsPsych.data.getURLVariable('PROLIFIC_PID'); // capture info from Prolific
-    // var id_session = jsPsych.data.getURLVariable('SESSION_ID'); // capture info from Prolific
-    // var id_study = jsPsych.data.getURLVariable('STUDY_ID'); // capture info from Prolific
-    // var id_version = 0; // UPDATE THIS
-    // var output_filename = `experiment_word_recognition/data/subj_${id_subject}.json`; // UPDATE THIS
-    
-
 
     function get_timeline_variables() {
         /**
@@ -89,11 +78,6 @@
             timeline_variables.push({
                 correct_response: key[i],
                 trial_num: i,
-                prompt_response: [
-                '<p><b>Which word appeared in the middle of the clip (i.e., overlapped the midpoint of the clip)?</b><p>' +
-                '<p>Type `?` to display the full list of possible words.</p>' +
-                `<p><small>Trial ${i + 1} of ${n_trials}<small></p>`,
-                ]
             });
         }
         if (resume) {
@@ -115,67 +99,40 @@
                 },
             }
 
-    var timeline_main_experiment_procedure = {
+    var timeline_location_overlap_proceedure = {
         /** 
          * This is the main experiment block.
-         * Pariticpants do one listening trial
-         * and then one response trial.
+         * Pariticpants do one listening trial.
          */
         timeline: [
             {
-                type: jsPsychDictionaryText,
-                prompt: jsPsych.timelineVariable('prompt_response'),
-                dictionary: dictionary,
-                size: 80,
-                columns: 5,
-                column_width: '1000px',
-                data: {
+                timeline: [{
+                    type: jsPsychHtmlButtonResponse,
+                    stimulus: "<p>Did the voices play from the same or different speaker?</p>",
+                    choices: ['Same', 'Different'],
+                    response_ends_trial: true,
+                    data: {
                     correct_response: jsPsych.timelineVariable('correct_response'),
                     trial_num: jsPsych.timelineVariable('trial_num'),
                 },
-                on_start: function (trial) {
-                    var trial_ix = trial.data.trial_num;
-                    if (trial_ix == resume_ix) {
-                        socket.onopen = () => socket.send(JSON.stringify({action: "trial_start", trial_ix: trial_ix}));
-                        } else {
-                            socket.send(JSON.stringify({action: "trial_start", trial_ix: trial_ix}))
-                        }
-                    // socket.onopen = () => socket.send(JSON.stringify({action: "trial_start", trial_ix: trial_ix}));
-                    console.log('on trial start');
-                },
-                on_finish: function (data) {
-                    var correct = data.response == jsPsych.timelineVariable('correct_response');
-                    jsPsych.data.get().addToLast({ correct: correct ? 1 : 0 });
-                    var n_correct = jsPsych.data.get().filter({ correct: 1 }).count()
-                    var n_incorrect = jsPsych.data.get().filter({ correct: 0 }).count()
-                    jsPsych.data.get().addToLast({ n_correct: n_correct });
-                    jsPsych.data.get().addToLast({ n_incorrect: n_incorrect });
-                },
-            },
-            {
-                timeline: [{
-                    type: jsPsychHtmlButtonResponse,
-                    stimulus: function () {
-                        n_correct = jsPsych.data.get().last().values()[0].n_correct
-                        n_incorrect = jsPsych.data.get().last().values()[0].n_incorrect
-                        pct_correct = (100 * n_correct / (n_correct + n_incorrect)).toFixed(2)
-                        if (jsPsych.data.get().last().values()[0].correct) {
-                            feedback = [
-                                `<h3>Correct!</h3>` +
-                                `<p>Current score: ${n_correct} (${pct_correct}%)</p>` +
-                                `<p>Press ANY KEY to start next trial</p>`,
-                            ];
-                        } else {
-                             feedback = [
-                                `<h3>The correct response was "${jsPsych.timelineVariable('correct_response')}"</h3>` +
-                                `<p>Current score: ${n_correct} (${pct_correct}%)</p>` +
-                                `<p>Press ANY KEY to start next trial</p>`,
-                            ];
-                        }
-                        return feedback
+                    on_start: function (trial) {
+                        var trial_ix = trial.data.trial_num;
+                        if (trial_ix == resume_ix) {
+                            socket.onopen = () => socket.send(JSON.stringify({action: "trial_start", trial_ix: trial_ix}));
+                            } else {
+                                socket.send(JSON.stringify({action: "trial_start", trial_ix: trial_ix}))
+                            }
+                        // socket.onopen = () => socket.send(JSON.stringify({action: "trial_start", trial_ix: trial_ix}));
+                        console.log('on trial start');
                     },
-                    choices: ['Next Trial'],
-                    response_ends_trial: true,
+                    on_finish: function (data) {
+                        var correct = data.response == jsPsych.timelineVariable('correct_response');
+                        jsPsych.data.get().addToLast({ correct: correct ? 1 : 0 });
+                        var n_correct = jsPsych.data.get().filter({ correct: 1 }).count()
+                        var n_incorrect = jsPsych.data.get().filter({ correct: 0 }).count()
+                        jsPsych.data.get().addToLast({ n_correct: n_correct });
+                        jsPsych.data.get().addToLast({ n_incorrect: n_incorrect });
+                    },
                 }],
                 conditional_function: function () {
                     return true
@@ -204,7 +161,7 @@
     // });
     var timeline = [
             // begin_experiment_trial,
-            timeline_main_experiment_procedure,
+            timeline_location_overlap_proceedure,
             timeline_main_experiment_goodbye,
         // timeline_welcome,
         // ...get_timeline_preexisting_filename(url_experiment_dir + output_filename), // Ensure unique participants
