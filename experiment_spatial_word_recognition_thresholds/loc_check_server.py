@@ -17,6 +17,9 @@ import sounddevice as sd
 from pathlib import Path 
 
 
+#### TO DO 
+### Update experiment runner to handle cue location 
+
 """
 Before running, make a new manifest and trial dict using `gen_participant_trials.ipynb`
 Then proceed with launching server
@@ -36,27 +39,27 @@ Checklist of changes to make to this file to run a new participant:
 # SET EXPERIMENT PARAMS AND VARS
 ##################################
 DB_SPL = 65
-BLOCK_LEN = 60
+BLOCK_LEN = 120
 
-PART_IX = 1
-EXP_DIR = Path("loc_separation_speaker_array_manifests")
+PART_IX = 29
+EXP_DIR = Path("speaker_array_manifests")
 PART_NAME = f"participant_{PART_IX:03d}"
-EXP_TYPE = "loc_separation"  # Name of sub directory to save experiment results - should match dir of trial dicts!
+EXP_TYPE = "localization_check"  # Name of sub directory to save experiment results - should match dir of trial dicts!
 
 EXPMT_TRIAL_DICT_NAME = f"{EXP_TYPE}/{PART_NAME}_trial_dict.pkl"
 
 # params that could but usually shouldn't change 
-EXPMT_TRIAL_DICT_DIR = Path("/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_spatial_word_recognition_thresholds/loc_separation_speaker_array_manifests")
+EXPMT_TRIAL_DICT_DIR = Path("/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_spatial_word_recognition_thresholds/speaker_array_manifests")
 EXPMT_TRIAL_DICT_PATH = EXPMT_TRIAL_DICT_DIR / EXPMT_TRIAL_DICT_NAME
 # open trial manifest 
 print(f"Running trial dict {EXPMT_TRIAL_DICT_PATH}")
 with open(EXPMT_TRIAL_DICT_PATH, 'rb') as f:
     trial_dict = pickle.load(f)
     
-# print(trial_dict)
+# print({f"trial_{ix}":vals[:2] for ix,vals in trial_dict.items()})
 
 # Set output data save path
-output_dir = Path("/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_spatial_word_recognition_thresholds/loc_sep_data")
+output_dir = Path("/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_spatial_word_recognition_thresholds/localization_check_data")
 output_dir = output_dir / EXP_TYPE 
 output_dir.mkdir(parents=True, exist_ok=True)
 out_name = output_dir/ f"{PART_NAME}.csv"

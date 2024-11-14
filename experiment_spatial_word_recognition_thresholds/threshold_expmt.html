@@ -20,8 +20,6 @@
 
     <script src="../main/util.js"></script>
     <script src="../main/plugin-dictionary-text.js"></script>
-    <!-- MAKE SURE TO UPDATE NAME OF PARTICIPANT ANSWER KEY -->
-    <script src="../root/expmt_keys/thresholds_v02_participant_025_key.js"></script>
     <script src="../root/dictionary_word_list_cv.js"></script>
 
 </head>
@@ -37,7 +35,9 @@
     resume = false; 
     resume_ix = 0;
     // get list of correct responses 
-
+    // <!-- MAKE SURE TO UPDATE NAME OF PARTICIPANT ANSWER KEY -->
+    var key = JSON.parse(Get("../root/expmt_keys/thresholds_v02_participant_029_key.json"))
+    console.log(key)
 
     // Initalize jsPsych object and experiment timeline
     function on_trial_finish() {
