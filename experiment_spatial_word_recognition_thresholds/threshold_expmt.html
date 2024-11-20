@@ -32,11 +32,11 @@
     const socket = new WebSocket("ws://mcdermottlab.local:8765")
     // MAKE SURE N_TRIALS MATCHES PARTICIPANT DICT
     n_trials = 480
-    resume = false; 
-    resume_ix = 0;
+    resume = true; 
+    resume_ix = 59;
     // get list of correct responses 
     // <!-- MAKE SURE TO UPDATE NAME OF PARTICIPANT ANSWER KEY -->
-    var key = JSON.parse(Get("../root/expmt_keys/thresholds_v02_participant_029_key.json"))
+    var key = JSON.parse(Get("../root/expmt_keys/thresholds_v02_participant_032_key.json"))
     console.log(key)
 
     // Initalize jsPsych object and experiment timeline

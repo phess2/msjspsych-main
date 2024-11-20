@@ -33,13 +33,15 @@
     // websockt set up
     const socket = new WebSocket("ws://mcdermottlab.local:8766")
     // MAKE SURE N_TRIALS MATCHES PARTICIPANT DICT
-    n_trials = 200
-    n_olap_trials = 120 // needs to match actual number of overlap trials
+    n_trials = 320
+    n_olap_trials = 160 // needs to match actual number of overlap trials
+    n_up_down = n_olap_trials + 80 // needs to match actual number of overlap trials
+    // TO RESUME, modify below
     resume = true; 
-    resume_ix = 135;
+    resume_ix = 240;
     // get list of correct responses 
     // !!! CHANGE PARTICIPANT NUMBER HERE !!! 
-    var key = JSON.parse(Get("../root/localization_check_expmt_keys/localization_check_participant_029_key.json"))
+    var key = JSON.parse(Get("../root/localization_check_expmt_keys/localization_check_v01_participant_001_key.json"))
     console.log(key)
 
     // Initalize jsPsych object and experiment timeline
@@ -116,8 +118,13 @@
                             stim_str = ["<p>Did the voices play from the same or different speaker?</p>"+
                                         `<p><small>Trial ${trial_ix + 1} of ${n_trials}<small></p>`,
                                         ]
+                                // update to have correct prompt
+                        } else if (trial_ix < n_up_down) {
+                            stim_str = ["<p>Did the target voice play from above or below the other voice?</p>"+
+                                        `<p><small>Trial ${trial_ix + 1} of ${n_trials}<small></p>`,
+                                       ]
                         } else {
-                            stim_str = ["<p>Did the cued voice play from above or below the other voice?</p>"+
+                            stim_str = ["<p>Did the target voice play from the left or right of the other voice?</p>"+
                                         `<p><small>Trial ${trial_ix + 1} of ${n_trials}<small></p>`,
                                        ]
                         }
@@ -128,9 +135,10 @@
                         var trial_ix = jsPsych.timelineVariable('trial_num');
                         if (trial_ix < n_olap_trials){
                             choice_str = ['Same', 'Different']
-                        } else {
+                        } else if (trial_ix < n_up_down){
                             choice_str = ['Above', 'Below']
-
+                        } else {
+                            choice_str = ['Left', 'Right']
                         }
                         return choice_str
                     },
@@ -180,9 +188,11 @@
                         } else {
                             if (trial_ix < n_olap_trials){
                                 choice_str = ['Same', 'Different']
-                            } else {
+                            } else if (trial_ix < n_up_down){
                                 choice_str = ['Above', 'Below']
-                            }   
+                            } else {
+                                choice_str = ['Left', 'Right']
+                            }
                             choice = choice_str[jsPsych.timelineVariable('correct_response')]
                              feedback = [
                                 `<h3>The correct response was "${choice}"</h3>` +

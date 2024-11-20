@@ -38,7 +38,7 @@ Checklist of changes to make to this file to run a new participant:
 DB_SPL = 65
 BLOCK_LEN = 80
 
-PART_IX = 29
+PART_IX = 32
 EXP_DIR = Path("speaker_array_manifests")
 PART_NAME = f"participant_{PART_IX:03d}"
 EXP_TYPE = "thresholds_v02"  # Name of sub directory to save experiment results - should match dir of trial dicts!

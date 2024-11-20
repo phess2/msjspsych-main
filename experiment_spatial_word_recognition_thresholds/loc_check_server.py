@@ -39,12 +39,15 @@ Checklist of changes to make to this file to run a new participant:
 # SET EXPERIMENT PARAMS AND VARS
 ##################################
 DB_SPL = 65
-BLOCK_LEN = 120
+BLOCK_LEN = 80
 
-PART_IX = 29
+PART_IX = 1
 EXP_DIR = Path("speaker_array_manifests")
-PART_NAME = f"participant_{PART_IX:03d}"
-EXP_TYPE = "localization_check"  # Name of sub directory to save experiment results - should match dir of trial dicts!
+if PART_IX < 0 :
+    PART_NAME = 'participant_test'
+else:
+    PART_NAME = f"participant_{PART_IX:03d}"
+EXP_TYPE = "localization_check_v01"  # Name of sub directory to save experiment results - should match dir of trial dicts!
 
 EXPMT_TRIAL_DICT_NAME = f"{EXP_TYPE}/{PART_NAME}_trial_dict.pkl"
 
