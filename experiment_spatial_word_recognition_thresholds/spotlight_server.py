@@ -38,12 +38,16 @@ Checklist of changes to make to this file to run a new participant:
 DB_SPL = 65
 BLOCK_LEN = 80
 
-PART_IX = 34
+PART_IX = 1
 EXP_DIR = Path("speaker_array_manifests")
-PART_NAME = f"participant_{PART_IX:03d}"
-EXP_TYPE = "thresholds_v02"  # Name of sub directory to save experiment results - should match dir of trial dicts!
+if PART_IX < 0 :
+    PART_NAME = 'participant_test'
+else:
+    PART_NAME = f"participant_{PART_IX:03d}"
+    
+EXP_TYPE = "spotlight_v00"  # Name of sub directory to save experiment results - should match dir of trial dicts!
 
-EXPMT_TRIAL_DICT_NAME = f"{EXP_TYPE}/{PART_NAME}_pilot_trial_dict.pkl"
+EXPMT_TRIAL_DICT_NAME = f"{EXP_TYPE}/{PART_NAME}_trial_dict.pkl"
 
 # params that could but usually shouldn't change 
 EXPMT_TRIAL_DICT_DIR = Path("/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_spatial_word_recognition_thresholds/speaker_array_manifests")
@@ -84,7 +88,7 @@ block_start_sound = speaker_utils.set_dba_level(block_start_sound, DB_SPL)
 
 async def index(request):
     return web.FileResponse(
-        "/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_spatial_word_recognition_thresholds/threshold_expmt.html"
+        "/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/experiment_spatial_word_recognition_thresholds/spotlight_expmnt.html"
     )
 
 ################################################
@@ -107,6 +111,7 @@ async def echo(websocket):
         print('\n')
         if trial_ix != None:
             trial_data = trial_dict[trial_ix]
+            trial_data = (trial_data[0] , (-trial_data[1][0] ,trial_data[1][1] )) + tuple(trial_data[2:])
             print(f"trial data: \n {trial_data}")
             await rn.run_exp(trial_ix,
                              trial_data,
@@ -141,7 +146,7 @@ async def start_server():
                     web.static("/main/", "/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/msjspsych-main/")])
     server = web.AppRunner(app)
     await server.setup()
-    site = web.TCPSite(server, "mcdermottlab.local", 9091)
+    site = web.TCPSite(server, "mcdermottlab.local", 9093)
     await site.start()
 
     ws_server = websockets.serve(echo, "mcdermottlab.local", 8765, ping_interval=None)

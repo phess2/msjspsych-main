@@ -41,7 +41,7 @@ Checklist of changes to make to this file to run a new participant:
 DB_SPL = 65
 BLOCK_LEN = 80
 
-PART_IX = 1
+PART_IX = 3
 EXP_DIR = Path("speaker_array_manifests")
 if PART_IX < 0 :
     PART_NAME = 'participant_test'

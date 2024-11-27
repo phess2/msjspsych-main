@@ -20,8 +20,6 @@
 
     <script src="../main/util.js"></script>
     <script src="../main/plugin-dictionary-text.js"></script>
-    <!-- MAKE SURE TO UPDATE NAME OF PARTICIPANT ANSWER KEY -->
-    <!-- <script src="../root/expmt_keys/thresholds_v02_participant_025_key.js"></script> -->
     <script src="../root/dictionary_word_list_cv.js"></script>
 
 </head>
@@ -31,17 +29,14 @@
 <script>
 
     // websockt set up
-    const socket = new WebSocket("ws://mcdermottlab.local:8766")
+    const socket = new WebSocket("ws://mcdermottlab.local:8765")
     // MAKE SURE N_TRIALS MATCHES PARTICIPANT DICT
-    n_trials = 320
-    n_olap_trials = 160 // needs to match actual number of overlap trials
-    n_up_down = n_olap_trials + 80 // needs to match actual number of overlap trials
-    // TO RESUME, modify below
-    resume = false; 
-    resume_ix = 0;
+    n_trials = 240
+    resume = true; 
+    resume_ix = 160;
     // get list of correct responses 
-    // !!! CHANGE PARTICIPANT NUMBER HERE !!! 
-    var key = JSON.parse(Get("../root/localization_check_expmt_keys/localization_check_v01_participant_003_key.json"))
+    // <!-- MAKE SURE TO UPDATE NAME OF PARTICIPANT ANSWER KEY -->
+    var key = JSON.parse(Get("../root/spotlight_expmt_keys/spotlight_v00_participant_001_key.json"))
     console.log(key)
 
     // Initalize jsPsych object and experiment timeline
@@ -69,6 +64,18 @@
 //         on_close: on_close,
         on_finish: on_finish,
     });
+    // Set parameters for saving data alongside subject identifiers (filename is relative to save_data.php directory)
+    // var url_experiment_dir = 'https://mcdermottlab.mit.edu/msaddler/msjspsych/';
+    // var path_to_stimuli = "/Users/mcdermottspeakerarray/Documents/binaural_cocktail_party/sounds";
+    // var url_write_data_php = url_experiment_dir + 'write_data.php';
+    // var id_random = jsPsych.randomization.randomID(10);
+    // var id_subject = jsPsych.data.getURLVariable('PROLIFIC_PID'); // capture info from Prolific
+    // var id_session = jsPsych.data.getURLVariable('SESSION_ID'); // capture info from Prolific
+    // var id_study = jsPsych.data.getURLVariable('STUDY_ID'); // capture info from Prolific
+    // var id_version = 0; // UPDATE THIS
+    // var output_filename = `experiment_word_recognition/data/subj_${id_subject}.json`; // UPDATE THIS
+    
+
 
     function get_timeline_variables() {
         /**
@@ -82,6 +89,11 @@
             timeline_variables.push({
                 correct_response: key[i],
                 trial_num: i,
+                prompt_response: [
+                '<p><b>Which word appeared in the middle of the clip (i.e., overlapped the midpoint of the clip)?</b><p>' +
+                '<p>Type `?` to display the full list of possible words.</p>' +
+                `<p><small>Trial ${i + 1} of ${n_trials}<small></p>`,
+                ]
             });
         }
         if (resume) {
@@ -103,71 +115,41 @@
                 },
             }
 
-    var timeline_location_overlap_proceedure = {
+    var timeline_main_experiment_procedure = {
         /** 
          * This is the main experiment block.
-         * Pariticpants do one listening trial.
+         * Pariticpants do one listening trial
+         * and then one response trial.
          */
         timeline: [
             {
-                timeline: [{
-                    type: jsPsychHtmlButtonResponse,
-                    stimulus: function (){
-                        var trial_ix = jsPsych.timelineVariable('trial_num')
-                        if (trial_ix < n_olap_trials){
-                            stim_str = ["<p>Did the voices play from the same or different speaker?</p>"+
-                                        `<p><small>Trial ${trial_ix + 1} of ${n_trials}<small></p>`,
-                                        ]
-                                // update to have correct prompt
-                        } else if (trial_ix < n_up_down) {
-                            stim_str = ["<p>Did the target voice play from above or below the other voice?</p>"+
-                                        `<p><small>Trial ${trial_ix + 1} of ${n_trials}<small></p>`,
-                                       ]
-                        } else {
-                            stim_str = ["<p>Did the target voice play from the left or right of the other voice?</p>"+
-                                        `<p><small>Trial ${trial_ix + 1} of ${n_trials}<small></p>`,
-                                       ]
-                        }
-
-                        return stim_str
-                    },
-                    choices: function (){
-                        var trial_ix = jsPsych.timelineVariable('trial_num');
-                        if (trial_ix < n_olap_trials){
-                            choice_str = ['Same', 'Different']
-                        } else if (trial_ix < n_up_down){
-                            choice_str = ['Above', 'Below']
-                        } else {
-                            choice_str = ['Left', 'Right']
-                        }
-                        return choice_str
-                    },
-                    response_ends_trial: true,
-                    data: {
+                type: jsPsychDictionaryText,
+                prompt: jsPsych.timelineVariable('prompt_response'),
+                dictionary: dictionary,
+                size: 80,
+                columns: 5,
+                column_width: '1000px',
+                data: {
                     correct_response: jsPsych.timelineVariable('correct_response'),
                     trial_num: jsPsych.timelineVariable('trial_num'),
                 },
-                    on_start: function (trial) {
-                        var trial_ix = trial.data.trial_num;
-                        if (trial_ix == resume_ix) {
-                            socket.onopen = () => socket.send(JSON.stringify({action: "trial_start", trial_ix: trial_ix}));
-                            } else {
-                                socket.send(JSON.stringify({action: "trial_start", trial_ix: trial_ix}))
-                            }
-                        // socket.onopen = () => socket.send(JSON.stringify({action: "trial_start", trial_ix: trial_ix}));
-                        console.log('on trial start');
-                    },
-                    on_finish: function (data) {
-                        var correct = data.response == jsPsych.timelineVariable('correct_response');
-                        jsPsych.data.get().addToLast({ correct: correct ? 1 : 0 });
-                        var n_correct = jsPsych.data.get().filter({ correct: 1 }).count()
-                        var n_incorrect = jsPsych.data.get().filter({ correct: 0 }).count()
-                        jsPsych.data.get().addToLast({ n_correct: n_correct });
-                        jsPsych.data.get().addToLast({ n_incorrect: n_incorrect });
-                    },
-                }],
-                conditional_function: function () {
-                    return true
+                on_start: function (trial) {
+                    var trial_ix = trial.data.trial_num;
+                    if (trial_ix == resume_ix) {
+                        socket.onopen = () => socket.send(JSON.stringify({action: "trial_start", trial_ix: trial_ix}));
+                        } else {
+                            socket.send(JSON.stringify({action: "trial_start", trial_ix: trial_ix}))
+                        }
+                    // socket.onopen = () => socket.send(JSON.stringify({action: "trial_start", trial_ix: trial_ix}));
+                    console.log('on trial start');
+                },
+                on_finish: function (data) {
+                    var correct = data.response == jsPsych.timelineVariable('correct_response');
+                    jsPsych.data.get().addToLast({ correct: correct ? 1 : 0 });
+                    var n_correct = jsPsych.data.get().filter({ correct: 1 }).count()
+                    var n_incorrect = jsPsych.data.get().filter({ correct: 0 }).count()
+                    jsPsych.data.get().addToLast({ n_correct: n_correct });
+                    jsPsych.data.get().addToLast({ n_incorrect: n_incorrect });
                 },
             },
             {
@@ -177,27 +159,17 @@
                         n_correct = jsPsych.data.get().last().values()[0].n_correct
                         n_incorrect = jsPsych.data.get().last().values()[0].n_incorrect
                         pct_correct = (100 * n_correct / (n_correct + n_incorrect)).toFixed(2)
-                        trial_ix = jsPsych.timelineVariable('trial_num')
-
                         if (jsPsych.data.get().last().values()[0].correct) {
                             feedback = [
                                 `<h3>Correct!</h3>` +
                                 `<p>Current score: ${n_correct} (${pct_correct}%)</p>` +
-                                `<p>Press NEXT TRIAL to start next trial</p>`,
+                                `<p>Press ANY KEY to start next trial</p>`,
                             ];
                         } else {
-                            if (trial_ix < n_olap_trials){
-                                choice_str = ['Same', 'Different']
-                            } else if (trial_ix < n_up_down){
-                                choice_str = ['Above', 'Below']
-                            } else {
-                                choice_str = ['Left', 'Right']
-                            }
-                            choice = choice_str[jsPsych.timelineVariable('correct_response')]
                              feedback = [
-                                `<h3>The correct response was "${choice}"</h3>` +
+                                `<h3>The correct response was "${jsPsych.timelineVariable('correct_response')}"</h3>` +
                                 `<p>Current score: ${n_correct} (${pct_correct}%)</p>` +
-                                `<p>Press NEXT TRIAL to start next trial</p>`,
+                                `<p>Press ANY KEY to start next trial</p>`,
                             ];
                         }
                         return feedback
@@ -221,11 +193,24 @@
     };
 
 
+    // Add subject metadata to jsPsych.data, build jsPsych experiment timeline, and run timeline
+    // jsPsych.data.addProperties({
+    //     output_filename: output_filename,
+    //     id_random: id_random,
+    //     id_study: id_study,
+    //     id_subject: id_subject,
+    //     id_session: id_session,
+    //     id_version: id_version,
+    // });
     var timeline = [
             // begin_experiment_trial,
-            timeline_location_overlap_proceedure,
+            timeline_main_experiment_procedure,
             timeline_main_experiment_goodbye,
-
+        // timeline_welcome,
+        // ...get_timeline_preexisting_filename(url_experiment_dir + output_filename), // Ensure unique participants
+        // ...get_timeline_survey(), // Include demographic survey timelines
+        // ...get_timeline_calibration(), // Include audio calibration timelines
+        // ...get_timeline_headphone_check(), // Include headphone check timelines
     ];
     jsPsych.run(timeline);
 </script>
