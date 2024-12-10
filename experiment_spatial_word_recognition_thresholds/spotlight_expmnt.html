@@ -32,8 +32,8 @@
     const socket = new WebSocket("ws://mcdermottlab.local:8765")
     // MAKE SURE N_TRIALS MATCHES PARTICIPANT DICT
     n_trials = 240
-    resume = true; 
-    resume_ix = 160;
+    resume = false; 
+    resume_ix = 0;
     // get list of correct responses 
     // <!-- MAKE SURE TO UPDATE NAME OF PARTICIPANT ANSWER KEY -->
     var key = JSON.parse(Get("../root/spotlight_expmt_keys/spotlight_v00_participant_001_key.json"))
