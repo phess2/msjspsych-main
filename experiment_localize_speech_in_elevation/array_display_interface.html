@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Button Selection</title>
+    <style>
+        button {
+            width: 120%;
+            height: 60px;
+            background-color: #D3D3D3;
+        }
+
+        #button-holder {
+            justify-content: space-between;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            column-count: 19;
+        }
+
+        .block {
+            display: block;
+            width: 100%;
+            border: none;
+            background-color: #D3D3D3;
+            padding: 14px 28px;
+            font-size: 20px;
+            cursor: pointer;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <button class="block" id="start"> START EXPERIMENT </button>
+    <br>
+    <div id="button-holder"></div>
+    <br>
+    <button class="block" id="submit" disabled="false"> SUBMIT </button>
+
+    <script>
+        // Connect to websocket
+        const socket = new WebSocket("ws://mcdermottlab.local:8765");
+        const color_primed = 'green';
+        const color_default = '#D3D3D3';
+        const color_notify = 'yellow';
+        
+        function restore_to_default_color(list_id) {
+            for (let i = 0; i < list_id.length; i++) {
+                document.getElementById(list_id[i]).style.backgroundColor = color_default;
+            }
+        }
+        
+        // Build array of response buttons
+        var list_loc = [];
+        for (let i = 0; i < 133; i++) {
+            row = 'ABCDEFG'[Math.floor(i % 7)];
+            col = Math.floor(i / 7) + 1;
+            list_loc.push(row + col);
+        }
+
+        for (let i = 0; i < list_loc.length; i++) {
+            loc = list_loc[i];
+            var btn = document.createElement("button");
+            btn.id = loc;
+            btn.disabled = true;
+            btn.textContent = loc;
+            btn.addEventListener("click", function (e) {
+                restore_to_default_color(list_loc);
+                this.style.backgroundColor = color_primed;
+                document.getElementById('submit').disabled = false;
+
+            });
+            document.getElementById('button-holder').appendChild(btn);
+        }
+
+        // Build start button functionality
+        btn = document.getElementById('start');
+        btn.addEventListener("click", function (e) {
+            this.style.backgroundColor = color_default;
+            restore_to_default_color(list_loc);
+            socket.send(JSON.stringify({ id: this.id, response: this.textContent }));
+            this.textContent = "";
+        });
+
+        // Build submit button functionality
+        btn = document.getElementById('submit');
+        btn.addEventListener("click", function (e) {
+            // get the current location value and bet value
+            var selected_loc = '';
+            // var selected_bet = '';
+            
+            for (let i = 0; i < list_loc.length; i++) {
+                let is_primed = document.getElementById(list_loc[i]).style.backgroundColor;
+                if(is_primed == color_primed){
+                    selected_loc = list_loc[i];
+                    break;
+                }
+            }
+            // disable the speaker grid
+            restore_to_default_color(list_loc)
+            for (let i = 0; i < list_loc.length; i++) {
+                document.getElementById(list_loc[i]).disabled = true;
+            }
+
+
+            // disable this button
+            this.disabled = true
+            this.style.backgroundColor = color_default;
+
+            // console.log(selected_bet)
+            console.log(selected_loc)
+
+            // send info back!
+            socket.send(JSON.stringify(
+                { 
+                    id: this.id, 
+                    response: '', 
+                    select_loc: selected_loc,
+                    // select_bet: selected_bet 
+                }));
+        });
+
+        // Received message from server
+        socket.onmessage = function (event) {
+            obj = JSON.parse(event.data);
+            if (obj.hasOwnProperty('disabled')) {
+                if (typeof obj.disabled == "boolean") {
+                    for (let i = 0; i < list_loc.length; i++) {
+                        document.getElementById(list_loc[i]).disabled = obj.disabled;
+                    }
+                } else {
+                    for (let i = 0; i < obj.disabled.length; i++) {
+                        document.getElementById(obj.disabled[i]).disabled = true;
+                    }
+                }
+            }
+
+            if (obj.hasOwnProperty('recolor')) {
+                if (typeof obj.recolor == "boolean") {
+                    var col_to_use = color_default;
+                    if (obj.recolor){
+                        col_to_use = color_notify;
+                    }
+                    for (let i = 0; i < list_loc.length; i++) {
+                        document.getElementById(list_loc[i]).style.backgroundColor = col_to_use;
+                    }
+                } else {
+                    for (let i = 0; i < obj.recolor.length; i++) {
+                        document.getElementById(obj.recolor[i]).style.backgroundColor = color_default;
+                    }
+                }
+            }
+
+            if (obj.hasOwnProperty('message')) {
+                document.getElementById('start').textContent = obj.message;
+            }
+            if (obj.hasOwnProperty('alert')) {
+                alert(obj.alert);
+            }
+        };
+    </script>
+</body>
+
+</html>
